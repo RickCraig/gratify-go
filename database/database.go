@@ -47,3 +47,22 @@ func (d *Database) GetCollection(collection string) (*mongo.Collection, context.
 	client, ctx, cancel := d.GetClient()
 	return client.Database("victoriam").Collection(collection), ctx, cancel
 }
+
+// Creates an index
+//
+//	// Single Index
+//	d.SetIndex("users", bson.D{{Key: "accessToken", Value: 1}})
+//	// Compound Index
+//	d.SetIndex("products", bson.D{{Key: "tags", value: 1}, {Key: "productType", Value: 1}})
+//	// Test Index
+//	d.SetIndex("products", bson.D{{Key: "description", Value: "text"}})
+//
+// Returns an error when the create index fails
+func (d *Database) SetIndex(collection string, model interface{}) error {
+	coll, ctx, cancel := d.GetCollection(collection)
+	defer cancel()
+
+	// Set the index if it doesn't currently exist
+	_, err := coll.Indexes().CreateOne(ctx, mongo.IndexModel{Keys: model})
+	return err
+}
