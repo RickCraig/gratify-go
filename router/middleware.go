@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +19,15 @@ type Middleware struct {
 var publicPaths []string = []string{
 	"/auth/login",
 	"/auth/register",
+	"/auth/forgot",
+	"/auth/reset",
+	"/user/by-token",
 }
 
 func contains(p string) bool {
 	for _, public := range publicPaths {
-		if p == public {
+		r, _ := regexp.Compile(public)
+		if r.MatchString(p) {
 			return true
 		}
 	}
@@ -109,8 +114,25 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 
 			// Set the user for use in the api endpoints
-			c.Set("user", user)
+			c.Set("user-id", user.Id)
 			c.Next()
 		}
+	}
+}
+
+// Sets all the CORS headers for Gin
+func (m *Middleware) CORS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
 	}
 }
