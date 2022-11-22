@@ -1,4 +1,4 @@
-module github.com/victoriam-go
+module github.com/gratify-go
 
 go 1.18
 
